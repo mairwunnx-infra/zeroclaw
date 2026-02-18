@@ -35,6 +35,13 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 2
+          submodules: recursive
+
+      - name: Verify submodule sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f zeroclaw/Cargo.toml
 
       - name: Detect changes
         id: changes
