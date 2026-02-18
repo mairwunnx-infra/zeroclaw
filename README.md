@@ -22,6 +22,7 @@ ZeroClaw стек для автономного Telegram-бота в инфра�
 ### Связные ссылки:
 
 - [Infra Zygote](https://github.com/mairwunnx-infra/zygote) - Зигота/основа инфраструктуры.
+- [Infra Dickobrazz](https://github.com/mairwunnx-infra/dickobrazz) - Portainer стек для проекта Dickobrazz.
 - [Infra Xi Manager](https://github.com/mairwunnx-infra/ximanager) - Portainer стек для проекта Xi Manager.
 - [Infra Ingress](https://github.com/mairwunnx-infra/ingress) - Portainer стек для входящего трафика.
 - [Infra VS Code](https://github.com/mairwunnx-infra/vscode) - Portainer стек для VS Code.
