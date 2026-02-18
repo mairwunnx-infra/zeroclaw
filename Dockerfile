@@ -21,6 +21,7 @@ COPY --from=builder /build/target/release/zeroclaw /usr/local/bin/zeroclaw
 COPY --chown=zeroclaw:zeroclaw configuration/config.toml  /home/zeroclaw/.zeroclaw/config.toml
 COPY --chown=zeroclaw:zeroclaw configuration/IDENTITY.md  /home/zeroclaw/.zeroclaw/workspace/IDENTITY.md
 COPY --chown=zeroclaw:zeroclaw configuration/SOUL.md      /home/zeroclaw/.zeroclaw/workspace/SOUL.md
+RUN chmod 600 /home/zeroclaw/.zeroclaw/config.toml
 USER zeroclaw
 WORKDIR /home/zeroclaw
 VOLUME ["/home/zeroclaw/.zeroclaw"]
