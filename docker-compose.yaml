@@ -1,0 +1,57 @@
+---
+networks:
+  infra:
+    external: true
+    name: infra
+x-backup-common-env: &backup-common-env
+  TZ: ${TZ}
+  AWS_ENDPOINT: ${AWS_ENDPOINT}
+  AWS_ENDPOINT_PROTO: ${AWS_ENDPOINT_PROTO}
+  AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  BACKUP_CRON_EXPRESSION: ${BACKUP_CRON_EXPRESSION}
+  BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS}
+services:
+  zeroclaw:
+    image: ghcr.io/mairwunnx-infra/zeroclaw:0.1.0
+    container_name: zeroclaw
+    cpus: '1.0'
+    restart: unless-stopped
+    networks: [infra]
+    environment:
+      ZEROCLAW_API_KEY: ${ZEROCLAW_API_KEY}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TZ: ${TZ}
+    expose: ["3000"]
+    volumes:
+      - zeroclaw_data:/home/zeroclaw/.zeroclaw
+    healthcheck:
+      test: ["CMD", "zeroclaw", "status"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: local
+      options:
+        max-file: '3'
+        max-size: 10m
+    mem_limit: 128m
+    mem_reservation: 64m
+  backup-zeroclaw:
+    image: offen/docker-volume-backup:v2
+    container_name: backup-zeroclaw
+    environment:
+      <<: *backup-common-env
+      AWS_S3_PATH: backups/${STACK_SLUG:-zeroclaw}/zeroclaw
+      BACKUP_FILENAME: zeroclaw-%Y%m%dT%H%M%S.tar.gz
+      BACKUP_PRUNING_PREFIX: zeroclaw-
+    volumes:
+      - zeroclaw_data:/backup/zeroclaw/data:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [infra]
+    restart: unless-stopped
+volumes:
+  zeroclaw_data:
+    driver: local
