@@ -1,8 +1,6 @@
 ---
 networks:
   infra:
-    external: true
-    name: infra
 x-backup-common-env: &backup-common-env
   TZ: ${TZ}
   AWS_ENDPOINT: ${AWS_ENDPOINT}
@@ -14,7 +12,7 @@ x-backup-common-env: &backup-common-env
   BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS}
 services:
   zeroclaw:
-    image: ghcr.io/mairwunnx-infra/zeroclaw:0.1.0
+    image: ghcr.io/mairwunnx-infra/zeroclaw:0.1.0-1
     container_name: zeroclaw
     cpus: '1.0'
     restart: unless-stopped
@@ -22,7 +20,30 @@ services:
     environment:
       ZEROCLAW_API_KEY: ${ZEROCLAW_API_KEY}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      COMPOSIO_API_KEY: ${COMPOSIO_API_KEY}
       TZ: ${TZ}
+    entrypoint:
+      - /bin/sh
+      - -ec
+    command:
+      - >-
+        CONFIG="/home/zeroclaw/.zeroclaw/config.toml";
+        escape_toml() { printf '%s' "$$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; };
+        TG_ESCAPED="$$(escape_toml "$${TELEGRAM_BOT_TOKEN:-}")";
+        COMPOSIO_ESCAPED="$$(escape_toml "$${COMPOSIO_API_KEY:-}")";
+        TMP_CONFIG="$$(mktemp)";
+        awk -v tg="$$TG_ESCAPED" -v comp="$$COMPOSIO_ESCAPED" '
+        BEGIN { in_tg=0; in_comp=0 }
+        /^\[channels_config\.telegram\]/ { in_tg=1; in_comp=0; print; next }
+        /^\[composio\]/ { in_comp=1; in_tg=0; print; next }
+        /^\[/ { in_tg=0; in_comp=0 }
+        in_tg && /^allowed_users = \[[0-9]+\]/ { print "allowed_users = [\"362695653\"]"; next }
+        in_tg && /^bot_token = / && tg != "" { print "bot_token = \"" tg "\""; next }
+        in_comp && /^api_key = / && comp != "" { print "api_key = \"" comp "\""; next }
+        { print }
+        ' "$$CONFIG" > "$$TMP_CONFIG";
+        mv "$$TMP_CONFIG" "$$CONFIG";
+        exec zeroclaw daemon
     expose: ["3000"]
     volumes:
       - zeroclaw_data:/home/zeroclaw/.zeroclaw

@@ -44,6 +44,9 @@ provider = "none"
 [secrets]
 encrypt = true
 
+[channels_config]
+cli = true
+
 [channels_config.telegram]
 bot_token = "__TELEGRAM_BOT_TOKEN__"
 allowed_users = ["362695653"]
