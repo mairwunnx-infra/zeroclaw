@@ -103,7 +103,7 @@ jobs:
       - name: Meta
         id: meta
         if: steps.changes.outputs.build == 'true'
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.ORG }}/${{ env.IMAGE_NAME }}
           tags: |
